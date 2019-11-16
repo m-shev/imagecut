@@ -8,10 +8,10 @@ import (
 	"net/http"
 )
 
-func main()  {
+func main() {
 	config.AddConfigPath("../config")
 	conf := config.GetConfig()
-
+	api := api.NewApi()
 	//gin.DefaultWriter = &lumberjack.Logger{
 	//	Filename:   "foo.log",
 	//	MaxSize:    500, // megabytes
@@ -23,13 +23,12 @@ func main()  {
 	handler.Use(gin.Recovery())
 	handler.Use(gin.Logger())
 
-
 	handler.GET("/status", api.Status)
 	handler.GET("/crop/:height/:width/*url", api.Crop)
 
 	server := &http.Server{
-		Addr:              conf.Http.Addr,
-		Handler:           handler,
+		Addr:    conf.Http.Addr,
+		Handler: handler,
 	}
 
 	err := server.ListenAndServe()
