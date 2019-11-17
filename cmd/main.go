@@ -4,6 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"imagecut/api"
 	"imagecut/config"
+	"imagecut/internal/lru"
 	"log"
 	"net/http"
 )
@@ -11,7 +12,8 @@ import (
 func main() {
 	config.AddConfigPath("../config")
 	conf := config.GetConfig()
-	api := api.NewApi()
+	cache := lru.NewLru(conf.CacheSize)
+	api := api.NewApi(cache)
 	//gin.DefaultWriter = &lumberjack.Logger{
 	//	Filename:   "foo.log",
 	//	MaxSize:    500, // megabytes

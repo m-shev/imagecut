@@ -7,12 +7,18 @@ import (
 
 type Config struct {
 	Http
+	Img
 	env    string
 	isRead bool
 }
 
 type Http struct {
 	Addr string
+}
+
+type Img struct {
+	ImageFolder string
+	CacheSize uint
 }
 
 type Logger struct {

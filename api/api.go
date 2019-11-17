@@ -11,9 +11,9 @@ type Api struct {
 	imgService *img.Img
 }
 
-func NewApi() *Api {
+func NewApi(cache img.Cache) *Api {
 	return &Api{
-		imgService: img.NewImg(),
+		imgService: img.NewImg(cache),
 	}
 }
 
@@ -31,7 +31,7 @@ func (api *Api) Crop(ctx *gin.Context) {
 		return
 	}
 
-	image, err := api.imgService.CropFromUrl(url, width, height)
+	image, err := api.imgService.CropByUrl(url, width, height)
 
 	if err != nil {
 		ctx.String(http.StatusInternalServerError, err.Error())
