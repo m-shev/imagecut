@@ -1,5 +1,7 @@
 Http:
   Addr: ":3000"
 Img:
-  ImageForlder: "images"
+  ImageFolder: "images"
+Cashe:
   CacheSize: 1048576
+  CachePath: "cache/data"
