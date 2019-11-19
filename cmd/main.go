@@ -17,7 +17,12 @@ import (
 func main() {
 	config.AddConfigPath("../config")
 	conf := config.GetConfig()
-	cache := lru.NewLru(conf.CacheSize, conf.CachePath)
+	cache, err := lru.NewLru(conf.CacheSize, conf.CachePath)
+
+	if err !=nil {
+		log.Fatal(err)
+	}
+
 	api := api.NewApi(cache, conf.ImageFolder)
 	//gin.DefaultWriter = &lumberjack.Logger{
 	//	Filename:   "foo.log",
@@ -39,20 +44,28 @@ func main() {
 		Handler: handler,
 	}
 
-	err := server.ListenAndServe()
+	go func() {
+		err := server.ListenAndServe()
 
-	if err != nil {
-		log.Fatal(err)
-	}
+		if err != nil {
+			log.Fatal(err)
+		}
+	}()
+
+	graceful(server, 5 * time.Second, func() {
+		err := cache.Flush()
+		log.Println(err)
+	})
 }
 
-func graceful(hs *http.Server, timeout time.Duration) {
+func graceful(hs *http.Server, timeout time.Duration, callback func()) {
 	stop := make(chan os.Signal, 1)
 
 	signal.Notify(stop, os.Interrupt, syscall.SIGTERM)
 
 	<-stop
 
+	callback()
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 

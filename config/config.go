@@ -7,8 +7,8 @@ import (
 
 type Config struct {
 	Http
-	Cache
 	Img
+	Cache
 	env    string
 	isRead bool
 }
@@ -19,7 +19,6 @@ type Http struct {
 
 type Img struct {
 	ImageFolder string
-
 }
 
 type Cache struct {

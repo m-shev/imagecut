@@ -61,6 +61,6 @@ func TestLru_Get(t *testing.T) {
 	}
 
 	if expected != got {
-		t.Error("expected value from cache:", expected, "got:", got)
+		t.Error("expected Value from cache:", expected, "got:", got)
 	}
 }

@@ -9,9 +9,9 @@ import (
 )
 
 type Lru struct {
-	path     string `json:"_"`
+	path     string
 	size     uint
-	maxSize  uint `json:"_"`
+	maxSize  uint
 	list     linkedlist.List
 	cacheMap map[string]*linkedlist.Item
 }
@@ -25,38 +25,47 @@ type CacheData struct {
 }
 
 type CacheItem struct {
-	value interface{}
-	key   string
-	size  uint
+	Value interface{}
+	Key   string
+	Size  uint
 }
 
-func NewLru(maxSize uint, path string) *Lru {
-	return &Lru{
+func NewLru(maxSize uint, path string) (*Lru, error) {
+	lru := &Lru{
 		path: path,
 		size:     0,
 		maxSize:  maxSize,
 		list:     linkedlist.List{},
 		cacheMap: make(map[string]*linkedlist.Item),
 	}
+
+	err := lru.restoreData()
+
+	if err != nil {
+		return lru, err
+	}
+
+	return lru, nil
 }
 
 func (l *Lru) Set(key string, value interface{}, size uint) ([]interface{}, error) {
 	_, ok := l.cacheMap[key]
 
 	if ok {
-		return nil, errors.New(fmt.Sprintf("value with key %s has already been added to the cache", key))
+		return nil, errors.New(fmt.Sprintf("Value with Key %s has already been added to the cache", key))
 	} else {
 		item := l.list.PushFront(&CacheItem{
-			value: value,
-			size:  size,
-			key:   key,
+			Value: value,
+			Size:  size,
+			Key:   key,
 		})
 
 		l.cacheMap[key] = item
 		l.size += size
-		exclusion, err := l.cleanCache()
-		return exclusion, err
+		excluded, err := l.cleanCache()
+		return excluded, err
 	}
+
 }
 
 func (l *Lru) Get(key string) (interface{}, error) {
@@ -71,23 +80,52 @@ func (l *Lru) Get(key string) (interface{}, error) {
 		item := l.list.PushFront(cacheItem)
 		l.cacheMap[key] = item
 
-		return cacheItem.value, nil
+		return cacheItem.Value, nil
 	}
 
 	return nil, nil
 }
 
-//func (l *Lru) readData {
-//
-//}
+func (l *Lru) restoreData() error {
+	bytes, err := ioutil.ReadFile(l.path)
 
-func (l *Lru) Flush() error {
-	str, err := json.Marshal(l)
 	if err != nil {
 		return err
 	}
 
-	err = ioutil.WriteFile(l.path, str, 0644)
+	var queue []CacheItem
+
+	err = json.Unmarshal(bytes, &queue)
+
+	if err !=nil {
+		return err
+	}
+
+	for _, cacheItem := range queue {
+		item := l.list.PushBack(&cacheItem)
+		l.cacheMap[cacheItem.Key] = item
+		l.size += cacheItem.Size
+	}
+
+	return nil
+}
+
+func (l *Lru) Flush() error {
+	queue := make([]CacheItem, 0)
+
+	item := l.list.First()
+		for item != nil {
+			queue = append(queue, *item.Value().(*CacheItem))
+			item = item.Next()
+	}
+
+	bytes, err := json.Marshal(queue)
+
+	if err != nil {
+		return err
+	}
+
+	err = ioutil.WriteFile(l.path, bytes, 0644)
 
 	return err
 }
@@ -106,10 +144,10 @@ func (l *Lru) cleanCache() ([]interface{}, error) {
 
 			cacheItem := item.Value().(*CacheItem)
 
-			delete(l.cacheMap, cacheItem.key)
+			delete(l.cacheMap, cacheItem.Key)
 
-			l.size -= cacheItem.size
-			excludedItems = append(excludedItems, cacheItem.value)
+			l.size -= cacheItem.Size
+			excludedItems = append(excludedItems, cacheItem.Value)
 		}
 	}
 
