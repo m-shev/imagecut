@@ -6,7 +6,7 @@ import (
 )
 
 func TestLru_Set(t *testing.T) {
-	lru := NewLru(3)
+	lru := NewLru(3, "")
 	var err error
 	var excluded []interface{}
 
@@ -43,7 +43,7 @@ func TestLru_Get(t *testing.T) {
 	var got int
 	expected := 2
 
-	lru := NewLru(1)
+	lru := NewLru(1, "")
 	_, err := lru.Set("1", 2, 1)
 
 	if err != nil {

@@ -3,5 +3,5 @@ Http:
 Img:
   ImageFolder: "images"
 Cache:
-  CacheSize: 1048576
+  CacheSize: 524288
   CachePath: "cache/data.json"

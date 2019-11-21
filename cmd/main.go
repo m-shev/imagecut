@@ -5,7 +5,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"imagecut/api"
 	"imagecut/config"
-	"imagecut/internal/lru"
 	"log"
 	"net/http"
 	"os"
@@ -17,13 +16,9 @@ import (
 func main() {
 	config.AddConfigPath("../config")
 	conf := config.GetConfig()
-	cache, err := lru.NewLru(conf.CacheSize, conf.CachePath)
 
-	if err !=nil {
-		log.Fatal(err)
-	}
 
-	api := api.NewApi(cache, conf.ImageFolder)
+	api := api.NewApi(conf.CacheSize, conf.CachePath, conf.ImageFolder)
 	//gin.DefaultWriter = &lumberjack.Logger{
 	//	Filename:   "foo.log",
 	//	MaxSize:    500, // megabytes
@@ -37,7 +32,7 @@ func main() {
 	handler.Use(gin.Logger())
 
 	handler.GET("/status", api.Status)
-	handler.GET("/crop/:height/:width/", api.Crop)
+	handler.GET("/crop/:width/:height/", api.Crop)
 
 	server := &http.Server{
 		Addr:    conf.Http.Addr,
@@ -53,7 +48,7 @@ func main() {
 	}()
 
 	graceful(server, 5 * time.Second, func() {
-		err := cache.Flush()
+		err := api.Graceful()
 		log.Println(err)
 	})
 }

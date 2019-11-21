@@ -6,6 +6,7 @@ import (
 	"github.com/disintegration/imaging"
 	"image"
 	"net/http"
+	"os"
 	"strings"
 )
 
@@ -17,6 +18,7 @@ type ImageData struct {
 	ImgType string
 	Id      string
 	Path    string
+	Size    uint
 	Header  http.Header
 	image   *image.Image
 }
@@ -41,7 +43,21 @@ func (i *Img) CropByUrl(url, fileName string, width, height int) (ImageData, err
 		return data, err
 	}
 
+	err = setFileSize(&data)
+
 	return data, nil
+}
+
+func setFileSize(data *ImageData) error {
+	stat, err := os.Stat(data.Path)
+
+	if err != nil {
+		return err
+	}
+
+	data.Size = uint(stat.Size())
+
+	return nil
 }
 
 func (i *Img) downloadImage(url string) (ImageData, error) {
