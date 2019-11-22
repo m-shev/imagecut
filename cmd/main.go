@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"github.com/gin-gonic/gin"
+	"go.uber.org/zap"
 	"imagecut/api"
 	"imagecut/config"
 	"log"
@@ -16,9 +17,9 @@ import (
 func main() {
 	config.AddConfigPath("../config")
 	conf := config.GetConfig()
+	logger := makeLogger(config.GetEnv())
 
-
-	api := api.NewApi(conf.CacheSize, conf.CachePath, conf.ImageFolder)
+	a := api.NewApi(conf.CacheSize, conf.CachePath, conf.ImageFolder, logger)
 	//gin.DefaultWriter = &lumberjack.Logger{
 	//	Filename:   "foo.log",
 	//	MaxSize:    500, // megabytes
@@ -26,13 +27,12 @@ func main() {
 	//	MaxAge:     28, // days
 	//}
 
-
 	handler := gin.New()
 	handler.Use(gin.Recovery())
 	handler.Use(gin.Logger())
 
-	handler.GET("/status", api.Status)
-	handler.GET("/crop/:width/:height/", api.Crop)
+	handler.GET("/status", a.Status)
+	handler.GET("/crop/:width/:height/", a.Crop)
 
 	server := &http.Server{
 		Addr:    conf.Http.Addr,
@@ -43,17 +43,48 @@ func main() {
 		err := server.ListenAndServe()
 
 		if err != nil {
-			log.Fatal(err)
+			logger.Error("", zap.Error(err))
 		}
 	}()
 
-	graceful(server, 5 * time.Second, func() {
-		err := api.Graceful()
-		log.Println(err)
-	})
+	err := graceful(server, 5*time.Second, makeGracefulCb(a, logger))
+
+	if err != nil {
+		logger.Error("", zap.Error(err))
+	} else {
+		logger.Info("Server stopped successfully")
+	}
 }
 
-func graceful(hs *http.Server, timeout time.Duration, callback func()) {
+func makeLogger(env string) *zap.Logger {
+	var err error
+	var logger *zap.Logger
+
+	switch env {
+	case config.EnvType.Prod:
+		logger, err = zap.NewProduction()
+	default:
+		logger, err = zap.NewDevelopment()
+	}
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return logger
+}
+
+func makeGracefulCb(a *api.Api, logger *zap.Logger) func() {
+	return func() {
+		if err := a.Graceful(); err != nil {
+			logger.Error("", zap.Error(err))
+		}
+	}
+}
+
+func graceful(hs *http.Server, timeout time.Duration, callback func()) error {
+	var err error
+
 	stop := make(chan os.Signal, 1)
 
 	signal.Notify(stop, os.Interrupt, syscall.SIGTERM)
@@ -64,11 +95,9 @@ func graceful(hs *http.Server, timeout time.Duration, callback func()) {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
-	log.Printf("\nShutdown with timeout: %s\n", timeout)
-
 	if err := hs.Shutdown(ctx); err != nil {
-		log.Printf("Error: %v\n", err)
-	} else {
-		log.Println("Server stopped")
+		return err
 	}
+
+	return err
 }

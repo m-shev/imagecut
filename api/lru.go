@@ -4,6 +4,7 @@ import (
 	"crypto/md5"
 	"encoding/json"
 	"fmt"
+	"github.com/gin-gonic/gin"
 	"imagecut/internal/img"
 	"imagecut/internal/lru"
 	"io/ioutil"
@@ -16,29 +17,31 @@ type CacheItem struct {
 	Value img.ImageData
 }
 
-func (a *Api) getFromCache(key string) (img.ImageData, bool) {
-	v, _ := a.cache.Get(key)
-	//TODO Add logging for get from cache error
+func (a *Api) getFromCache(key string, ctx *gin.Context) (img.ImageData, bool) {
+	a.Mutex.Lock()
+	v, err := a.cache.Get(key)
+	a.Mutex.Unlock()
+
+	a.logOnErr(ctx, err)
+
 	if v != nil {
 		return v.(img.ImageData), true
 	}
 
-
 	return img.ImageData{}, false
 }
 
-func (a *Api) setToCache(key string, data img.ImageData) {
+func (a *Api) setToCache(key string, data img.ImageData, ctx *gin.Context) {
 
-	//TODO remove excluded files
-	excluded, _ := a.cache.Set(key, data, data.Size)
+	a.Mutex.Lock()
+	excluded, err := a.cache.Set(key, data, data.Size)
+	a.Mutex.Unlock()
+
+	a.logOnErr(ctx, err)
 
 	for _, v := range excluded {
 		err := os.Remove(v.(img.ImageData).Path)
-
-		if err != nil {
-			fmt.Println("remove error", err)
-			//Todo log error
-		}
+		a.logOnErr(ctx, err)
 	}
 }
 
@@ -52,22 +55,6 @@ func (a *Api) flushCache() error {
 	}
 
 	err = ioutil.WriteFile(a.cachePath, bytes, 0644)
-
-	return err
-}
-
-func (a *Api) removeCacheFile() error {
-	_, err := os.Stat(a.cachePath)
-
-	if os.IsNotExist(err) {
-		return nil
-	}
-
-	if err != nil {
-		return err
-	}
-
-	err = os.Remove(a.cachePath)
 
 	return err
 }

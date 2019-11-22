@@ -1,7 +1,6 @@
 package api
 
 import (
-	"fmt"
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"strconv"
@@ -17,26 +16,21 @@ func (a *Api) Crop(ctx *gin.Context) {
 		return
 	}
 
-	//fileName := hasher(ctx.Request.URL.Path)
-	fileName := fmt.Sprintf("%d-%d", width, height)
-	a.Lock()
-	imgData, ok := a.getFromCache(fileName)
+	fileName := hasher(ctx.Request.RequestURI)
 
-	fmt.Println("get from cache", ok)
+	imgData, ok := a.getFromCache(fileName, ctx)
 
 	if !ok {
 		imgData, err = a.imgService.CropByUrl(url, fileName, width, height)
-		fmt.Println(imgData)
+
 		if err != nil {
 			ctx.String(http.StatusInternalServerError, err.Error())
 			return
 		}
 
-
-		a.setToCache(fileName, imgData)
-
+		a.setToCache(fileName, imgData, ctx)
 	}
-	a.Unlock()
+
 	ctx.File(imgData.Path)
 }
 

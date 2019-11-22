@@ -16,7 +16,6 @@ type Img struct {
 
 type ImageData struct {
 	ImgType string
-	Id      string
 	Path    string
 	Size    uint
 	Header  http.Header

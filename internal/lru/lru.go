@@ -40,10 +40,12 @@ func NewLru(maxSize uint, path string) *Lru {
 }
 
 func (l *Lru) Set(key string, value interface{}, size uint) ([]interface{}, error) {
+	var err error
+	excluded := make([]interface{}, 0)
 	_, ok := l.cacheMap[key]
 
 	if ok {
-		return nil, errors.New(fmt.Sprintf("Value with Key %s has already been added to the cache", key))
+		return excluded, errors.New(fmt.Sprintf("Value with key %s has already been added to the cache", key))
 	} else {
 		item := l.list.PushFront(&CacheItem{
 			Value: value,
@@ -53,14 +55,13 @@ func (l *Lru) Set(key string, value interface{}, size uint) ([]interface{}, erro
 
 		l.cacheMap[key] = item
 		l.size += size
-		excluded, err := l.cleanCache()
+		excluded, err = l.cleanCache()
 		return excluded, err
 	}
 
 }
 
 func (l *Lru) Get(key string) (interface{}, error) {
-
 	if item, ok := l.cacheMap[key]; ok {
 		err := item.Remove()
 
@@ -88,7 +89,7 @@ func (l *Lru) RestoreData(queue []*CacheItem) {
 }
 
 func (l *Lru) Flush() []CacheItem {
-	queue := make([]CacheItem, 0)
+	queue := make([]CacheItem,  0)
 
 	item := l.list.First()
 	for item != nil {
