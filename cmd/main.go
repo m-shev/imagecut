@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"github.com/gin-gonic/gin"
+	"github.com/natefinch/lumberjack"
 	"go.uber.org/zap"
 	"imagecut/api"
 	"imagecut/config"
@@ -19,13 +20,13 @@ func main() {
 	conf := config.GetConfig()
 	logger := makeLogger(config.GetEnv())
 
-	a := api.NewApi(conf.CacheSize, conf.CachePath, conf.ImageFolder, logger)
-	//gin.DefaultWriter = &lumberjack.Logger{
-	//	Filename:   "foo.log",
-	//	MaxSize:    500, // megabytes
-	//	MaxBackups: 3,
-	//	MaxAge:     28, // days
-	//}
+	a := api.NewApi(conf.CacheSize, conf.CachePath, conf.Img, logger)
+	gin.DefaultWriter = &lumberjack.Logger{
+		Filename:   "foo.log",
+		MaxSize:    500, // megabytes
+		MaxBackups: 3,
+		MaxAge:     28, // days
+	}
 
 	handler := gin.New()
 	handler.Use(gin.Recovery())

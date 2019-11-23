@@ -2,34 +2,47 @@ package api
 
 import (
 	"github.com/gin-gonic/gin"
+	"imagecut/internal/img"
 	"net/http"
 	"strconv"
 )
 
 func (a *Api) Crop(ctx *gin.Context) {
+	fileName := hasher(ctx.Request.RequestURI)
+
+	imgData, ok := a.getFromCache(fileName, ctx)
+
+	if ok {
+		ctx.File(imgData.Path)
+	} else {
+		a.downloadAndCrop(ctx, fileName)
+	}
+}
+
+func (a *Api) downloadAndCrop(ctx *gin.Context, fileName string) {
 	url := ctx.Query("origin")
 
 	width, height, err := convertCropParams(ctx.Param("width"), ctx.Param("height"))
 
 	if err != nil {
+		a.logOnErr(ctx, err)
 		ctx.String(http.StatusBadRequest, err.Error())
 		return
 	}
 
-	fileName := hasher(ctx.Request.RequestURI)
+	imgData, err := a.imgService.CropByUrl(img.ImageSource{
+		Url:      url,
+		Headers:  &ctx.Request.Header,
+		FileName: fileName,
+	}, width, height)
 
-	imgData, ok := a.getFromCache(fileName, ctx)
-
-	if !ok {
-		imgData, err = a.imgService.CropByUrl(url, fileName, width, height)
-
-		if err != nil {
-			ctx.String(http.StatusInternalServerError, err.Error())
-			return
-		}
-
-		a.setToCache(fileName, imgData, ctx)
+	if err != nil {
+		a.logOnErr(ctx, err)
+		ctx.String(http.StatusInternalServerError, err.Error())
+		return
 	}
+
+	a.setToCache(fileName, imgData, ctx)
 
 	ctx.File(imgData.Path)
 }

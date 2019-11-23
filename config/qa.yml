@@ -1,0 +1,9 @@
+Logging:
+  ErrorLog:
+    FileName: "error.log"
+    MaxBackups: 3
+    MaxAge: 28 #days
+  AccessLog:
+    FileName: "access.log"
+    MaxBackups: 3
+    MaxAge: 28 #days

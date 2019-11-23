@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
+	"imagecut/config"
 	"imagecut/internal/img"
 	"imagecut/internal/lru"
 	"net/http"
@@ -18,12 +19,12 @@ type Api struct {
 	logOnErr   func(ctx *gin.Context, err error)
 }
 
-func NewApi(cacheSize uint, cachePath string, imageFolder string, logger *zap.Logger) *Api {
+func NewApi(cacheSize uint, cachePath string, imgConfig config.Img, logger *zap.Logger) *Api {
 	logOnError := makeLogOnErr(logger)
 
 	api := &Api{
 		logOnErr:   logOnError,
-		imgService: img.NewImg(imageFolder),
+		imgService: img.NewImg(imgConfig.ImageFolder, imgConfig.DownloadTimeout),
 		cache:      lru.NewLru(cacheSize, cachePath),
 		cachePath:  cachePath,
 	}

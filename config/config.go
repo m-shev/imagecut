@@ -5,36 +5,12 @@ import (
 	"log"
 )
 
-type Config struct {
-	Http
-	Img
-	Cache
-	env    string
-	isRead bool
-}
-
-type Http struct {
-	Addr string
-}
-
-type Img struct {
-	ImageFolder string
-}
-
-type Cache struct {
-	CacheSize uint
-	CachePath string
-}
-
-type Logger struct {
-	Env string
-}
-
 var EnvType = struct {
 	def  string
 	Dev  string
+	QA   string
 	Prod string
-}{Dev: "DEV", Prod: "PROD"}
+}{Dev: "DEV", Prod: "PROD", QA: "QA"}
 
 var conf = &Config{env: EnvType.def, isRead: false}
 
@@ -42,6 +18,7 @@ var configFiles = map[string]string{
 	EnvType.def:  "default",
 	EnvType.Dev:  "dev",
 	EnvType.Prod: "prod",
+	EnvType.QA:   "qa",
 }
 
 const (

@@ -1,3 +1,4 @@
 .idea
-app/images
-app/cache
+app-data/images
+app-data/cache
+app-data/log

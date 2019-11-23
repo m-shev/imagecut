@@ -1,42 +1,65 @@
 package img
 
 import (
-	"errors"
 	"fmt"
 	"github.com/disintegration/imaging"
-	"image"
+	"io"
 	"net/http"
 	"os"
 	"strings"
+	"time"
 )
 
 type Img struct {
-	imageFolder string
+	imageFolder     string
+	downloadTimeout time.Duration
 }
+
+var supportedImgTypes = []string{"jpeg", "png", "gif", "tiff", "bmp"}
+var supportedImgTypesStr = strings.Join(supportedImgTypes, ", ")
 
 type ImageData struct {
 	ImgType string
 	Path    string
 	Size    uint
 	Header  http.Header
-	image   *image.Image
+	src     io.Reader
 }
 
-func NewImg(imageFolder string) *Img {
-	return &Img{imageFolder: imageFolder}
+type ImageSource struct {
+	Url      string
+	Headers  *http.Header
+	FileName string
 }
 
-func (i *Img) CropByUrl(url, fileName string, width, height int) (ImageData, error) {
-	data, err := i.downloadImage(url)
+func NewImg(imageFolder string, downloadTimeout time.Duration) *Img {
+	return &Img{
+		imageFolder:     imageFolder,
+		downloadTimeout: downloadTimeout,
+	}
+}
+
+func (i *Img) CropByUrl(source ImageSource, width, height int) (ImageData, error) {
+	data, err := i.downloadFile(source.Url, source.Headers)
 
 	if err != nil {
 		return data, err
 	}
 
-	cropped := imaging.CropAnchor(*data.image, width, height, imaging.Center)
-	data.Path = fmt.Sprintf("%s/%s.%s", i.imageFolder, fileName, data.ImgType)
+	if err = isImgTypeSupported(data.ImgType); err != nil {
+		return data, err
+	}
 
-	err = imaging.Save(cropped, data.Path)
+	im, err := imaging.Decode(data.src)
+
+	if err != nil {
+		return data, err
+	}
+
+	im = imaging.CropAnchor(im, width, height, imaging.Center)
+	data.Path = fmt.Sprintf("%s/%s.%s", i.imageFolder, source.FileName, data.ImgType)
+
+	err = imaging.Save(im, data.Path)
 
 	if err != nil {
 		return data, err
@@ -59,42 +82,20 @@ func setFileSize(data *ImageData) error {
 	return nil
 }
 
-func (i *Img) downloadImage(url string) (ImageData, error) {
-	var imageData ImageData
-	res, err := http.Get(url)
-
-	if err != nil {
-		return imageData, err
+func isImgTypeSupported(imgType string) error {
+	for _, v := range supportedImgTypes {
+		if v == imgType {
+			return nil
+		}
 	}
 
-	defer res.Body.Close()
-
-	src, err := imaging.Decode(res.Body)
-
-	if err != nil {
-		return imageData, err
-	}
-
-	imgType, err := extractImgType(res.Header)
-
-	if err != nil {
-		return imageData, err
-	}
-
-	return ImageData{
-		ImgType: imgType,
-		Header:  res.Header,
-		image:   &src,
-	}, nil
+	return makeUnsupportedImgFormatError(imgType)
 }
 
-func extractImgType(header http.Header) (string, error) {
-	content := header.Get("Content-Type")
-	s := strings.Split(content, "/")
-
-	if len(s) >= 2 {
-		return s[1], nil
-	} else {
-		return "", errors.New("unable to determine image format")
-	}
+func makeUnsupportedImgFormatError(imgType string) error {
+	return fmt.Errorf(
+		"unsupported image format: \"%s\", avalibale: %s",
+		imgType,
+		supportedImgTypesStr,
+	)
 }
