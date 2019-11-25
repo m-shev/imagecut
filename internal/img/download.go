@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"errors"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 	"strings"
@@ -72,7 +71,6 @@ func extractImgType(header http.Header) (string, error) {
 	s := strings.Split(content, "/")
 
 	if len(s) >= 2 {
-		fmt.Println("format", s[1])
 		return s[1], nil
 	} else {
 		return "", errors.New("unable to determine image format")

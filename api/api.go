@@ -19,8 +19,8 @@ type Api struct {
 	logOnErr   func(ctx *gin.Context, err error)
 }
 
-func NewApi(cacheSize uint, cachePath string, imgConfig config.Img, logger *zap.Logger) *Api {
-	logOnError := makeLogOnErr(logger)
+func NewApi(cacheSize uint, cachePath string, imgConfig config.Img, errorLogger *zap.Logger) *Api {
+	logOnError := makeLogOnErr(errorLogger)
 
 	api := &Api{
 		logOnErr:   logOnError,

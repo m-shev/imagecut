@@ -3,8 +3,9 @@ package main
 import (
 	"context"
 	"github.com/gin-gonic/gin"
-	"github.com/natefinch/lumberjack"
 	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
+	"gopkg.in/natefinch/lumberjack.v2"
 	"imagecut/api"
 	"imagecut/config"
 	"log"
@@ -18,19 +19,15 @@ import (
 func main() {
 	config.AddConfigPath("../config")
 	conf := config.GetConfig()
-	logger := makeLogger(config.GetEnv())
+	env := config.GetEnv()
+
+	logger := makeErrorLogger(env, conf.Logging.ErrorLog)
 
 	a := api.NewApi(conf.CacheSize, conf.CachePath, conf.Img, logger)
-	gin.DefaultWriter = &lumberjack.Logger{
-		Filename:   "foo.log",
-		MaxSize:    500, // megabytes
-		MaxBackups: 3,
-		MaxAge:     28, // days
-	}
 
 	handler := gin.New()
 	handler.Use(gin.Recovery())
-	handler.Use(gin.Logger())
+	handler.Use(makeLogMiddleware(env, conf.Logging.AccessLog))
 
 	handler.GET("/status", a.Status)
 	handler.GET("/crop/:width/:height/", a.Crop)
@@ -57,13 +54,25 @@ func main() {
 	}
 }
 
-func makeLogger(env string) *zap.Logger {
+func makeErrorLogger(env string, param config.LogParams) *zap.Logger {
 	var err error
 	var logger *zap.Logger
 
 	switch env {
+	case config.EnvType.QA:
+		fallthrough
 	case config.EnvType.Prod:
-		logger, err = zap.NewProduction()
+		w := zapcore.AddSync(&lumberjack.Logger{
+			Filename:   param.FileName,
+			MaxBackups: param.MaxBackups,
+			MaxAge:     param.MaxAge,
+		})
+		core := zapcore.NewCore(
+			zapcore.NewJSONEncoder(zap.NewProductionEncoderConfig()),
+			w,
+			zap.ErrorLevel,
+		)
+		logger = zap.New(core)
 	default:
 		logger, err = zap.NewDevelopment()
 	}
@@ -73,6 +82,18 @@ func makeLogger(env string) *zap.Logger {
 	}
 
 	return logger
+}
+
+func makeLogMiddleware(env string, params config.LogParams) gin.HandlerFunc {
+	if env == config.EnvType.QA || env == config.EnvType.Prod {
+		gin.DefaultWriter = &lumberjack.Logger{
+			Filename:   params.FileName,
+			MaxBackups: params.MaxBackups,
+			MaxAge:     params.MaxAge,
+		}
+	}
+
+	return gin.Logger()
 }
 
 func makeGracefulCb(a *api.Api, logger *zap.Logger) func() {
@@ -93,6 +114,7 @@ func graceful(hs *http.Server, timeout time.Duration, callback func()) error {
 	<-stop
 
 	callback()
+
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 

@@ -6,6 +6,7 @@ type Config struct {
 	Http
 	Img
 	Cache
+	Logging
 	env    string
 	isRead bool
 }

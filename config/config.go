@@ -1,24 +1,23 @@
 package config
 
 import (
+	"flag"
 	"github.com/spf13/viper"
 	"log"
 )
 
 var EnvType = struct {
-	def  string
 	Dev  string
 	QA   string
 	Prod string
 }{Dev: "DEV", Prod: "PROD", QA: "QA"}
 
-var conf = &Config{env: EnvType.def, isRead: false}
+var conf = &Config{isRead: false}
 
 var configFiles = map[string]string{
-	EnvType.def:  "default",
 	EnvType.Dev:  "dev",
-	EnvType.Prod: "prod",
 	EnvType.QA:   "qa",
+	EnvType.Prod: "prod",
 }
 
 const (
@@ -48,6 +47,7 @@ func readConfig() {
 	defineEnv()
 	readDefault()
 	readTargetConfig()
+	readFlags()
 	conf.isRead = true
 }
 
@@ -80,10 +80,11 @@ func defineEnv() {
 	switch env {
 	case EnvType.Prod:
 		conf.env = EnvType.Prod
-	case EnvType.Dev:
+	case EnvType.QA:
+		conf.env = EnvType.QA
+	default:
 		conf.env = EnvType.Dev
 	}
-	conf.env = viper.GetString(envVar)
 }
 
 func unmarshal() {
@@ -99,5 +100,14 @@ func read() {
 
 	if err != nil {
 		log.Fatal(err)
+	}
+}
+
+func readFlags() {
+	size := flag.Uint("cache", 0, "cache size")
+	flag.Parse()
+
+	if *size > 0 {
+		conf.CacheSize = *size
 	}
 }

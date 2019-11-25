@@ -1,9 +1,9 @@
 Logging:
   ErrorLog:
-    FileName: "error.log"
+    FileName: "app-data/log/error.log"
     MaxBackups: 3
     MaxAge: 28 #days
   AccessLog:
-    FileName: "access.log"
+    FileName: "app-data/log/access.log"
     MaxBackups: 3
     MaxAge: 28 #days
