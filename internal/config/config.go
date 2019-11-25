@@ -23,8 +23,12 @@ var configFiles = map[string]string{
 const (
 	prefix            = "imagecut"
 	envVar            = "env"
+	cacheSizeVar      = "CACHE_SIZE"
+	cachePathVar      = "CACHE_PATH"
+	imgFolder		  = "IMAGE_FOLDER"
 	defaultConfig     = "default"
 	defaultConfigPath = "./config"
+
 )
 
 func GetConfig() Config {
@@ -47,6 +51,7 @@ func readConfig() {
 	defineEnv()
 	readDefault()
 	readTargetConfig()
+	readEnvs()
 	readFlags()
 	conf.isRead = true
 }
@@ -100,6 +105,26 @@ func read() {
 
 	if err != nil {
 		log.Fatal(err)
+	}
+}
+
+func readEnvs() {
+	cacheSize := viper.GetUint(cacheSizeVar)
+
+	if cacheSize > 0 {
+		conf.CacheSize = cacheSize
+	}
+
+	cachePath := viper.GetString(cachePathVar)
+
+	if cachePath != "" {
+		conf.CachePath = cachePath
+	}
+
+	imgFolder := viper.GetString(imgFolder)
+
+	if imgFolder != "" {
+		conf.ImageFolder = imgFolder
 	}
 }
 

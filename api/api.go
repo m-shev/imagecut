@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
-	"imagecut/config"
+	"imagecut/internal/config"
 	"imagecut/internal/img"
 	"imagecut/internal/lru"
 	"net/http"
