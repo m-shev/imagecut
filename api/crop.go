@@ -13,6 +13,8 @@ func (a *Api) Crop(ctx *gin.Context) {
 	imgData, ok := a.getFromCache(fileName, ctx)
 
 	if ok {
+		ctx.Header("X-IMAGECUT-FROM-CACHE", "true")
+		ctx.Header("cache-control", "public, max-age=3600")
 		ctx.File(imgData.Path)
 	} else {
 		a.downloadAndCrop(ctx, fileName)
@@ -43,6 +45,13 @@ func (a *Api) downloadAndCrop(ctx *gin.Context, fileName string) {
 	}
 
 	a.setToCache(fileName, imgData, ctx)
+	ctx.Header("X-IMAGECUT-FROM-CACHE", "false")
+
+	for k, v := range imgData.Header {
+		for _, h :=range v {
+			ctx.Header(k, h)
+		}
+	}
 
 	ctx.File(imgData.Path)
 }
@@ -57,4 +66,12 @@ func convertCropParams(w, h string) (width int, height int, err error) {
 	height, err = strconv.Atoi(h)
 
 	return
+}
+
+func addHeaders(req *http.Request, headers *http.Header) {
+	for k, v := range *headers {
+		for _, h := range v {
+			req.Header.Add(k, h)
+		}
+	}
 }

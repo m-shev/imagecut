@@ -3,6 +3,7 @@ module imagecut
 go 1.12
 
 require (
+	github.com/DATA-DOG/godog v0.7.13
 	github.com/disintegration/imaging v1.6.1
 	github.com/gin-gonic/gin v1.4.0
 	github.com/gorilla/mux v1.7.3 // indirect

@@ -1,0 +1,21 @@
+version: '3'
+
+services:
+  image-store:
+    image: mshev/imagecut-nginx
+    container_name: nginx-image-store
+
+  imagecut:
+    image: mshev/imagecut
+    container_name: imagecut-test
+    environment:
+      IMAGECUT_ENV: "QA"
+    ports:
+    - "3000:3000"
+
+  integration_test:
+    image: mshev/imagecut-test
+    container_name: test
+    depends_on:
+      - image-store
+      - imagecut

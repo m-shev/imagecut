@@ -1,15 +1,6 @@
 Img:
-  ImageFolder: "images"
+  ImageFolder: "app-data/images"
   DownloadTimeout: 5000
 Cache:
   CacheSize: 548576
-  CachePath: "cache/data.json"
-Logging:
-  ErrorLog:
-    FileName: "log/error.log"
-    MaxBackups: 3
-    MaxAge: 28 #days
-  AccessLog:
-    FileName: "log/access.log"
-    MaxBackups: 3
-    MaxAge: 28 #days
+  CachePath: "app-data/cache/data.json"

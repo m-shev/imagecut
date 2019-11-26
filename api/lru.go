@@ -45,7 +45,10 @@ func (a *Api) setToCache(key string, data img.ImageData, ctx *gin.Context) {
 	}
 }
 
-func (a *Api) flushCache() error {
+func (a *Api) FlushCache() error {
+	a.Mutex.Lock()
+	defer a.Mutex.Unlock()
+
 	cache := a.cache.Flush()
 
 	bytes, err := json.Marshal(cache)

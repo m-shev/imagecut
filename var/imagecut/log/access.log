@@ -1,5 +1,0 @@
-[GIN] 2019/11/25 - 15:19:13 | 500 |  441.631613ms |             ::1 | GET      /crop/300/500/?origin=https://i.ytimg.com/vi/bkNCylkzFRk/maxresdefault.jpg
-[GIN] 2019/11/25 - 15:20:20 | 200 |      24.889µs |             ::1 | GET      /status
-[GIN] 2019/11/25 - 15:24:51 | 200 |      22.544µs |             ::1 | GET      /status
-[GIN] 2019/11/25 - 15:25:05 | 500 |  9.719290763s |             ::1 | GET      /crop/900/900/?origin=https://avatars.mds.yandex.net/get-pdb/805160/9f51ab3a-1868-47c0-998d-a03d9b25ca06/s1200
-[GIN] 2019/11/25 - 15:25:17 | 500 |  2.384981501s |             ::1 | GET      /crop/900/900/?origin=https://i.ytimg.com/vi/yTLqfUxwdDk/maxresdefault.jpg

@@ -1,3 +1,9 @@
+Img:
+  ImageFolder: "app-data/images"
+  DownloadTimeout: 5000
+Cache:
+  CacheSize: 524288000 #500
+  CachePath: "app-data/cache/data.json"
 Logging:
   ErrorLog:
     FileName: "app-data/log/error.log"

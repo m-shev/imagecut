@@ -129,7 +129,7 @@ func readEnvs() {
 }
 
 func readFlags() {
-	size := flag.Uint("cache", 0, "cache size")
+	size := flag.Uint("cache-size", 0, "cache size")
 	flag.Parse()
 
 	if *size > 0 {

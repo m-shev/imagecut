@@ -30,16 +30,12 @@ func NewApi(cacheSize uint, cachePath string, imgConfig config.Img, errorLogger 
 	}
 
 	err := api.restoreCache()
-	logOnError(nil, err)
+	errorLogger.Warn("Failed to restore cache", zap.Error(err))
 	return api
 }
 
 func (a *Api) Status(ctx *gin.Context) {
 	ctx.String(http.StatusOK, "Ok")
-}
-
-func (a *Api) Graceful() error {
-	return a.flushCache()
 }
 
 func makeLogOnErr(logger *zap.Logger) func(ctx *gin.Context, err error) {
