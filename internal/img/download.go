@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"strings"
@@ -22,6 +23,16 @@ func (i *Img) downloadFile(url string, header *http.Header) (ImageData, error) {
 		return imageData, err
 	}
 
+	if res.StatusCode != 200 && res.StatusCode != 304 {
+		imageData.StatusCode = res.StatusCode
+		if res.StatusCode == 404 {
+			err = fmt.Errorf("image not found")
+		} else {
+			err = fmt.Errorf("cannot download image")
+		}
+		return imageData, err
+	}
+
 	defer res.Body.Close()
 
 	imgType, err := extractImgType(res.Header)
@@ -37,9 +48,10 @@ func (i *Img) downloadFile(url string, header *http.Header) (ImageData, error) {
 	}
 
 	return ImageData{
-		ImgType: imgType,
-		Header:  res.Header,
-		src:     bytes.NewReader(src),
+		ImgType:    imgType,
+		Header:     res.Header,
+		StatusCode: res.StatusCode,
+		src:        bytes.NewReader(src),
 	}, nil
 }
 

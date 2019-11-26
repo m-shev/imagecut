@@ -19,11 +19,12 @@ var supportedImgTypes = []string{"jpeg", "png", "gif", "tiff", "bmp"}
 var supportedImgTypesStr = strings.Join(supportedImgTypes, ", ")
 
 type ImageData struct {
-	ImgType string
-	Path    string
-	Size    uint
-	Header  http.Header
-	src     io.Reader
+	ImgType    string
+	Path       string
+	Size       uint
+	StatusCode int
+	Header     http.Header
+	src        io.Reader
 }
 
 type ImageSource struct {

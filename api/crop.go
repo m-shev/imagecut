@@ -39,8 +39,16 @@ func (a *Api) downloadAndCrop(ctx *gin.Context, fileName string) {
 	}, width, height)
 
 	if err != nil {
+		var statusCode int
+
+		if imgData.StatusCode != 0 {
+			statusCode = imgData.StatusCode
+		} else {
+			statusCode = http.StatusInternalServerError
+		}
+
+		ctx.String(statusCode, err.Error())
 		a.logOnErr(ctx, err)
-		ctx.String(http.StatusInternalServerError, err.Error())
 		return
 	}
 
@@ -48,11 +56,12 @@ func (a *Api) downloadAndCrop(ctx *gin.Context, fileName string) {
 	ctx.Header("X-IMAGECUT-FROM-CACHE", "false")
 
 	for k, v := range imgData.Header {
-		for _, h :=range v {
+		for _, h := range v {
 			ctx.Header(k, h)
 		}
 	}
 
+	ctx.Status(imgData.StatusCode)
 	ctx.File(imgData.Path)
 }
 
@@ -66,12 +75,4 @@ func convertCropParams(w, h string) (width int, height int, err error) {
 	height, err = strconv.Atoi(h)
 
 	return
-}
-
-func addHeaders(req *http.Request, headers *http.Header) {
-	for k, v := range *headers {
-		for _, h := range v {
-			req.Header.Add(k, h)
-		}
-	}
 }

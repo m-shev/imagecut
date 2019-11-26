@@ -30,7 +30,11 @@ func NewApi(cacheSize uint, cachePath string, imgConfig config.Img, errorLogger 
 	}
 
 	err := api.restoreCache()
-	errorLogger.Warn("Failed to restore cache", zap.Error(err))
+
+	if err != nil {
+		errorLogger.Warn("Failed to restore cache", zap.Error(err))
+	}
+
 	return api
 }
 
