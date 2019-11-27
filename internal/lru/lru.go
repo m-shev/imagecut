@@ -89,7 +89,7 @@ func (l *Lru) RestoreData(queue []*CacheItem) {
 }
 
 func (l *Lru) Flush() []CacheItem {
-	queue := make([]CacheItem,  0)
+	queue := make([]CacheItem, 0)
 
 	item := l.list.First()
 	for item != nil {

@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
@@ -22,15 +21,14 @@ func main() {
 
 	conf := config.GetConfig()
 	env := config.GetEnv()
-	fmt.Println(env, conf)
 	logger := makeErrorLogger(env, conf.Logging.ErrorLog)
-
 	a := api.NewApi(conf.CacheSize, conf.CachePath, conf.Img, logger)
 
 	server := &http.Server{
 		Addr:    conf.Http.Addr,
 		Handler: makeHandler(a, env, conf),
 	}
+
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, os.Interrupt, syscall.SIGTERM)
 
@@ -50,7 +48,6 @@ func main() {
 	if err = graceful(server, 5*time.Second); err != nil {
 		logger.Error("", zap.Error(err))
 	}
-
 
 }
 
@@ -99,7 +96,7 @@ func makeErrorLogger(env string, param config.LogParams) *zap.Logger {
 }
 
 func makeLogMiddleware(env string, params config.LogParams) gin.HandlerFunc {
-	if  env == config.EnvType.Prod {
+	if env == config.EnvType.Prod {
 		gin.DefaultWriter = &lumberjack.Logger{
 			Filename:   params.FileName,
 			MaxBackups: params.MaxBackups,

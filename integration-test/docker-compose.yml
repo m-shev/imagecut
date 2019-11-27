@@ -2,7 +2,7 @@ version: '3'
 
 services:
   image-storage:
-    image: mshev/imagecut-nginx
+    image: mshev/imagecut-test-nginx
     container_name: nginx-image-store
 
   imagecut:
