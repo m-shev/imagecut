@@ -4,5 +4,5 @@ Img:
   ImageFolder: "app-data/images"
   DownloadTimeout: 5000
 Cache:
-  CacheSize: 548576
+  CacheSize: 52428800 #50mb
   CachePath: "app-data/cache/data.json"
