@@ -73,9 +73,14 @@ func (i *Img) makeReq(ctx context.Context, url string, header *http.Header) (*ht
 func addHeaders(req *http.Request, headers *http.Header) {
 	for k, v := range *headers {
 		for _, h := range v {
-			req.Header.Add(k, h)
+			if k != "If-Modified-Since" && k != "If-None-Match" {
+				req.Header.Set(k, h)
+			}
 		}
 	}
+
+	req.Header.Set("Cache-Control", "no-cache")
+	req.Header.Set("Pragma", "no-cache")
 }
 
 func extractImgType(header http.Header) (string, error) {

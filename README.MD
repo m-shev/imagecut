@@ -3,7 +3,7 @@
 ## Команды
 * Скомпилировать проект ```make build```
 * Скомпилировать и запустить ```make run```  
-проверить ```http://localhost:3000/crop/900/900/?origin=https://s1.1zoom.ru/big3/297/Canada_Mountains_Scenery_488936.jpg```
+проверить ```http://localhost:3000/crop/900/900/?origin=https://www.1zoom.ru/big2/49/179561-melisenta.jpg```
 * Запустить тесты ```make test```
 * Запустить в docker container для тестирования ```make qa```
 * Запустить в docker container для production  ```make prod```
