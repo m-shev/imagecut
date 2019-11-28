@@ -15,7 +15,7 @@ type Img struct {
 	downloadTimeout time.Duration
 }
 
-var supportedImgTypes = []string{"jpeg", "png", "gif", "tiff", "bmp"}
+var supportedImgTypes = []string{"jpeg", "jpg", "png", "gif", "tiff", "bmp"}
 var supportedImgTypesStr = strings.Join(supportedImgTypes, ", ")
 
 type ImageData struct {
