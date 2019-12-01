@@ -5,8 +5,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -41,7 +42,8 @@ func (i *Img) downloadFile(url string, header *http.Header) (ImageData, error) {
 		return imageData, err
 	}
 
-	src, err := ioutil.ReadAll(res.Body)
+	src := bytes.NewBuffer(make([]byte, 0, getContentLength(res.Header)))
+	_, err = io.Copy(src, res.Body)
 
 	if err != nil {
 		return imageData, err
@@ -51,7 +53,7 @@ func (i *Img) downloadFile(url string, header *http.Header) (ImageData, error) {
 		ImgType:    imgType,
 		Header:     res.Header,
 		StatusCode: res.StatusCode,
-		src:        bytes.NewReader(src),
+		src:        src,
 	}, nil
 }
 
@@ -92,4 +94,15 @@ func extractImgType(header http.Header) (string, error) {
 	} else {
 		return "", errors.New("unable to determine image format")
 	}
+}
+
+func getContentLength(header http.Header) int {
+	l := header.Get("Content-Length")
+	contentLength, err := strconv.Atoi(l)
+
+	if err != nil {
+		return 0
+	}
+
+	return contentLength
 }
